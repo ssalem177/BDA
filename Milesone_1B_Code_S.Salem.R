@@ -6,7 +6,7 @@
 # Loading Required Packages
 library(tidyverse)
 library(ggplot2)
-
+library(patchwork)
 
 
 ## SECTION 2.2.1 - DATA CLEANING FOR IMDB DATASET
@@ -97,13 +97,36 @@ cor(ATI_nozeroactor$actors_score, ATI_nozeroactor$revenue)
 # Section 3.4 - K-Means clustering 
 
 
-ATI_kmeans <- kmeans(ATI %>% select(revenue,imdb_score),centers = 3)
-ATI <- ATI %>% mutate(no_cluster = factor(ATI_kmeans$cluster))
+ATI_kmeans_budget <- kmeans(ATI %>% select(budget),centers = 3)
+ATI <- ATI %>% mutate(no_cluster = factor(ATI_kmeans_budget$cluster))
 
-ATI %>% ggplot(aes(imdb_score,revenue,colour = no_cluster)) + geom_point() + labs(title = "Twitter Score vs Revenue, seperated into K-Means clusters")
+p1 <- ATI %>% ggplot(aes(revenue,colour = no_cluster)) + geom_boxplot() + labs(title = "Revenue, seperated into K-Means clusters of Budget")
 
-ATI_kmeans
+ATI <- ATI %>% select(-no_cluster) # remove cluster column, as plot ends
 
-cor(as.numeric(ATI$no_cluster), (ATI$revenue))
+ATI_kmeans_twitter <- kmeans(ATI %>% select(twitter_score),centers = 3)
+ATI <- ATI %>% mutate(no_cluster = factor(ATI_kmeans_twitter$cluster))
+
+p2 <- ATI %>% ggplot(aes(revenue,colour = no_cluster)) + geom_boxplot() + labs(title = "Revenue, seperated into K-Means clusters of Twitter Scores")
+
+ATI <- ATI %>% select(-no_cluster)
+
+ATI_kmeans_imdb <- kmeans(ATI %>% select(imdb_score),centers = 3)
+ATI <- ATI %>% mutate(no_cluster = factor(ATI_kmeans_imdb$cluster))
+
+p3 <- ATI %>% ggplot(aes(revenue,colour = no_cluster)) + geom_boxplot() + labs(title = "Revenue, seperated into K-Means clusters of IMDB Scores")
+
+ATI <- ATI %>% select(-no_cluster) 
+
+ATI_kmeans_actors <- kmeans(ATI %>% select(actors_score),centers = 3)
+ATI <- ATI %>% mutate(no_cluster = factor(ATI_kmeans_actors$cluster))
+
+p4 <- ATI %>% ggplot(aes(revenue,colour = no_cluster)) + geom_boxplot() + labs(title = "Revenue, seperated into K-Means clusters of Actor Scores")
 
 
+p1 / p2 
+p3 / p4
+
+ATI_highactors <- ATI %>% filter(no_cluster == 1)
+
+cor(ATI_highactors$revenue, ATI_highactors$actors_score)
